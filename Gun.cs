@@ -1,84 +1,64 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
-using static Models;
+using static Container;
 
 public abstract class Gun : MonoBehaviour
 {
-    [SerializeField] private PauseMenu pauseMenu;
-    [SerializeField] private TextMeshProUGUI ammoText;
     [SerializeField] public GameObject muzzleFlashPrefab;
-    [HideInInspector] public InputMappings inputMappings;
-    [HideInInspector] public PlayerMovement playerMovement;
-    public WeaponSettingsModel weaponSettings;
-    [HideInInspector] public PlayerSettingsModel playerSettings;
+    private InputManager inputManager;
+    private SoundManager soundManager;
+    [HideInInspector] public PlayerController playerController;
+    public WeaponSettings weaponSettings;
+    [HideInInspector] public PlayerSettings playerSettings;
     [HideInInspector] public Transform cameraTransform;
     [HideInInspector] public bool isShooting = false;
-    [HideInInspector] private RecoilSystem recoil;
     public GunData gunData;
     public Transform gunMuzzle;
     public GameObject bulletHolePrefab;
     private CharacterController characterController;
-    public AudioSource audioSource;
     private float timeBetweenShots;
-    private float currentAmmo = 0f;
     private float nextTimeToFire = 0f;
     private bool isReloading = false;
 
-    [Header("Sway Settings")]
-    private Vector3 newWeaponRotation;
+    [Header("Ammo Settings")]
+    public float currentAmmo;
+    public float reserveAmmo;
+    public float maxReserveAmmo;
 
-    private Vector3 newWeaponRotationVelocity;
-    private Vector3 targetWeaponRotation;
-    private Vector3 targetWeaponRotationVelocity;
-    private Vector3 newWeaponMovementRotation;
-    private Vector3 newWeaponMovementRotationVelocity;
-    private Vector3 targetWeaponMovementRotation;
-    private Vector3 targetWeaponMovementRotationVelocity;
 
     [Header("ADS Settings")]
     private Vector3 idlePosition;
-    private Quaternion idleRotation;
     [SerializeField] private Vector3 aimPosition;
-    [SerializeField] private Quaternion aimRotation;
-    [HideInInspector] public bool isAiming { get; private set; }
     public float adsSmoothTime;
 
-    [Header("Bobbing Settings")]
-    [SerializeField] private float WeaponBobAmount;
+    private Vector3 newWeaponRotation = Vector3.zero;
+    private Vector3 newWeaponRotationVelocity = Vector3.zero;
+    private Vector3 targetWeaponRotation = Vector3.zero;
+    private Vector3 targetWeaponRotationVelocity = Vector3.zero;
 
-    [SerializeField] private float bobbingSpeed;
-
-    private bool isMoving;
-
-    private void Start()
+    void Start()
     {
         currentAmmo = gunData.magazineSize;
-        newWeaponRotation = transform.localRotation.eulerAngles;
-        playerMovement = transform.root.GetComponent<PlayerMovement>();
-        inputMappings = transform.root.GetComponent<InputMappings>();
-        cameraTransform = playerMovement.cameraHolder.transform;
+        playerController = transform.root.GetComponent<PlayerController>();
+        inputManager = InputManager.Instance;
+        soundManager = SoundManager.Instance;
+        cameraTransform = playerController.cameraTransform.transform;
         characterController = GameObject.Find("Player").GetComponent<CharacterController>();
-        audioSource = GetComponent<AudioSource>();
         idlePosition = transform.localPosition;
-        idleRotation = transform.localRotation;
-        recoil = GetComponent<RecoilSystem>();
 
-        weaponSettings.SwayXInverted = playerSettings.ViewXInverted;
-        weaponSettings.SwayYInverted = playerSettings.ViewYInverted;
+        newWeaponRotation = transform.localRotation.eulerAngles;
 
         timeBetweenShots = 60f / gunData.RPM;
         adsSmoothTime = gunData.ADSSpeed;
     }
 
-    public void Update()
+    void Update()
     {
-        if (Time.timeScale == 0 || pauseMenu.isPaused) return;
+        if (Time.timeScale == 0) return;
 
-        isMoving = characterController.velocity.magnitude > 0.1f;
-
-        bool fire = inputMappings.shootAction.triggered;
-        bool reload = inputMappings.reloadAction.triggered;
+        bool fire = inputManager.ShootAction.triggered;
+        bool reload = inputManager.ReloadAction.triggered;
         bool canFire = Time.time >= nextTimeToFire;
 
         if (reload && canFire)
@@ -90,115 +70,39 @@ public abstract class Gun : MonoBehaviour
         {
             TryShoot();
         }
-        else if (gunData.isAutomatic && inputMappings.shootAction.ReadValue<float>() > 0f && canFire)
+        else if (gunData.isAutomatic && inputManager.ShootAction.ReadValue<float>() > 0f && canFire)
         {
             TryShoot();
         }
-        else if (!gunData.isAutomatic && inputMappings.shootAction.ReadValue<float>() == 0f)
+        else if (!gunData.isAutomatic && inputManager.ShootAction.ReadValue<float>() == 0f)
         {
             isShooting = false;
         }
 
         ADS();
-        ApplyBobbing();
-        CalculateWeaponSway();
-        HandleSway();
+        WeaponSway();
+
     }
 
-    private void ADS()
+    void WeaponSway()
     {
-        isAiming = inputMappings.AimAction.ReadValue<float>() > 0.5f;
-        float inverseSmoothTime = 1f / adsSmoothTime;
-        transform.localPosition = Vector3.Lerp(transform.localPosition, isAiming ? aimPosition : idlePosition, inverseSmoothTime * Time.deltaTime);
-        transform.localRotation = Quaternion.Lerp(transform.localRotation, isAiming ? aimRotation : idleRotation, inverseSmoothTime * Time.deltaTime);
-    }
-
-
-    private void UpdateAmmoText()
-    {
-        if (HUDManager.Instance == null) return;
-
-        if (isReloading)
-        {
-            HUDManager.Instance.UpdateAmmoText("Reloading...", Color.gray);
-        }
-        else
-        {
-            if (currentAmmo <= 5)
-            {
-                HUDManager.Instance.UpdateAmmoText($"{currentAmmo} / {gunData.magazineSize}", Color.red);
-                if (!isReloading) StartCoroutine(BlinkTextEffect());
-            }
-            else
-            {
-                StopCoroutine(BlinkTextEffect());
-                ammoText.enabled = true;
-                HUDManager.Instance.UpdateAmmoText($"{currentAmmo} / {gunData.magazineSize}", Color.white);
-            }
-        }
-    }
-
-    private IEnumerator BlinkTextEffect()
-    {
-        while (isReloading || currentAmmo <= 5)
-        {
-            ammoText.enabled = !ammoText.enabled;
-            yield return new WaitForSeconds(0.7f);
-        }
-
-        ammoText.enabled = true;
-    }
-
-    private IEnumerator FadeTextEffect()
-    {
-        float fadeDuration = 0.5f;
-        float elapsedTime = 0f;
-
-        Color originalColor = ammoText.color;
-
-        while (elapsedTime < fadeDuration)
-        {
-            ammoText.color = new Color(originalColor.r, originalColor.g, originalColor.b, 1 - (elapsedTime / fadeDuration));
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
-
-        ammoText.color = originalColor;
-        isReloading = false;
-        UpdateAmmoText();
-    }
-
-    private void HandleSway()
-    {
-        float aimMultiplier = isAiming ? 0.1f : 1f;
-        // Rotation Sway
-        targetWeaponRotation.y += weaponSettings.SwayAmount * aimMultiplier * (weaponSettings.SwayXInverted ? -inputMappings.lookInput.x : inputMappings.lookInput.x) * Time.deltaTime;
-        targetWeaponRotation.x += weaponSettings.SwayAmount * aimMultiplier * (weaponSettings.SwayYInverted ? inputMappings.lookInput.y : -inputMappings.lookInput.y) * Time.deltaTime;
+        targetWeaponRotation.y += inputManager.viewInput.x * weaponSettings.SwayAmount * (weaponSettings.SwayXInverted ? -1 : 1) * Time.deltaTime;
+        targetWeaponRotation.x += -inputManager.viewInput.y * weaponSettings.SwayAmount * (weaponSettings.SwayYInverted ? -1 : 1) * Time.deltaTime;
 
         targetWeaponRotation.x = Mathf.Clamp(targetWeaponRotation.x, -weaponSettings.SwayClampX, weaponSettings.SwayClampX);
         targetWeaponRotation.y = Mathf.Clamp(targetWeaponRotation.y, -weaponSettings.SwayClampY, weaponSettings.SwayClampY);
-        targetWeaponRotation.z = targetWeaponRotation.y;
 
-        targetWeaponRotation = Vector3.SmoothDamp(targetWeaponRotation, Vector3.zero, ref targetWeaponRotationVelocity, weaponSettings.SwayResetSmoothing);
+        targetWeaponRotation = Vector3.SmoothDamp(targetWeaponRotation, Vector3.zero, ref targetWeaponRotationVelocity, weaponSettings.SwaySmoothing);
         newWeaponRotation = Vector3.SmoothDamp(newWeaponRotation, targetWeaponRotation, ref newWeaponRotationVelocity, weaponSettings.SwaySmoothing);
 
-        // Movement Sway
-        targetWeaponMovementRotation.z = weaponSettings.MovementSwayX * aimMultiplier * (weaponSettings.MovementSwayXInverted ? -inputMappings.moveInput.x : inputMappings.moveInput.x);
-        targetWeaponMovementRotation.x = weaponSettings.MovementSwayY * aimMultiplier * (weaponSettings.MovementSwayYInverted ? inputMappings.moveInput.y : -inputMappings.moveInput.y);
-
-        targetWeaponMovementRotation = Vector3.SmoothDamp(targetWeaponMovementRotation, Vector3.zero, ref targetWeaponMovementRotationVelocity, weaponSettings.MovementSwaySmoothing);
-        newWeaponMovementRotation = Vector3.SmoothDamp(newWeaponMovementRotation, targetWeaponMovementRotation, ref newWeaponMovementRotationVelocity, weaponSettings.MovementSwaySmoothing);
-
-        transform.localRotation = Quaternion.Euler(newWeaponRotation + newWeaponMovementRotation);
+        transform.localRotation = Quaternion.Euler(newWeaponRotation);
     }
 
-    private void ApplyBobbing()
+    void ADS()
     {
-        float aimMultiplier = isAiming ? 0.5f : 1f;
-        float bobbingAmount = isMoving ? WeaponBobAmount : 0f;
-
-        Vector3 bobOffset = new Vector3(0, Mathf.Sin(Time.time * bobbingSpeed) * bobbingAmount * aimMultiplier, 0);
-        transform.localPosition += (bobOffset * Time.deltaTime);
+        inputManager.isAiming = inputManager.AimAction.ReadValue<float>() > 0.5f;
+        float inverseSmoothTime = 1f / adsSmoothTime;
+        transform.localPosition = Vector3.Lerp(transform.localPosition, inputManager.isAiming ? aimPosition : idlePosition, inverseSmoothTime * Time.deltaTime);
     }
 
     public void TryReload()
@@ -209,15 +113,26 @@ public abstract class Gun : MonoBehaviour
         }
     }
 
-    private IEnumerator Reload()
+    IEnumerator Reload()
     {
+        if (reserveAmmo <= 0 || currentAmmo == gunData.magazineSize)
+        {
+            yield break;
+        }
+
         isReloading = true;
-        UpdateAmmoText();
+        // UpdateAmmoText(); 
         yield return new WaitForSeconds(gunData.reloadTime - 0.5f);
-        StartCoroutine(FadeTextEffect());
-        currentAmmo = gunData.magazineSize;
+
+
+        float ammoNeeded = gunData.magazineSize - currentAmmo;
+        float ammoToTransfer = Mathf.Min(ammoNeeded, reserveAmmo);
+
+        currentAmmo += ammoToTransfer;
+        reserveAmmo -= ammoToTransfer;
+
         isReloading = false;
-        UpdateAmmoText();
+        // UpdateAmmoText(); 
     }
 
     public void TryShoot()
@@ -227,16 +142,22 @@ public abstract class Gun : MonoBehaviour
             return;
         }
 
-        nextTimeToFire = Time.time + timeBetweenShots;
-        HandleShoot();
-        UpdateAmmoText();
+        if (currentAmmo > 0)
+        {
+            nextTimeToFire = Time.time + timeBetweenShots;
+            HandleShoot();
+            // UpdateAmmoText(); 
+        }
+        else if (reserveAmmo > 0)
+        {
+            TryReload();
+        }
     }
 
-    private void HandleShoot()
+    void HandleShoot()
     {
         isShooting = true;
         currentAmmo--;
-        recoil.ApplyRecoil();
         StartCoroutine(FlashMuzzle());
         Shoot();
         PlayerFireSound();
@@ -257,7 +178,7 @@ public abstract class Gun : MonoBehaviour
         }
     }
 
-    private void BulletHitFX(RaycastHit hit)
+    void BulletHitFX(RaycastHit hit)
     {
         Vector3 hitPosition = hit.point + hit.normal * 0.1f;
 
@@ -268,7 +189,7 @@ public abstract class Gun : MonoBehaviour
         Destroy(bulletHole, 3f);
     }
 
-    private IEnumerator FlashMuzzle()
+    IEnumerator FlashMuzzle()
     {
         GameObject flashInstance = Instantiate(muzzleFlashPrefab, gunMuzzle.position, gunMuzzle.rotation);
         flashInstance.transform.SetParent(gunMuzzle);
@@ -283,33 +204,23 @@ public abstract class Gun : MonoBehaviour
         Destroy(flashInstance);
     }
 
-    private void PlayerFireSound()
+    void PlayerFireSound()
     {
-        if (gunData.fireSound != null && audioSource != null)
+        if (gunData.fireSound != null && soundManager.weaponSFX != null)
         {
-            audioSource.PlayOneShot(gunData.fireSound);
+            soundManager.weaponSFX.PlayOneShot(gunData.fireSound);
         }
     }
 
-    //Weapon Breathing animation
-    private void CalculateWeaponSway()
+    public void AddAmmo(float amount)
     {
-        float aimMultiplier = isAiming ? 0.1f : 1f;
-
-        var targetPosition = LissajousCurve(weaponSettings.swayTime, weaponSettings.swayAmountA, weaponSettings.swayAmountB) / weaponSettings.swayScale * aimMultiplier;
-        weaponSettings.swayPosition = Vector3.Lerp(weaponSettings.swayPosition, targetPosition, Time.smoothDeltaTime * weaponSettings.swayLerpSpeed);
-        weaponSettings.swayTime += Time.deltaTime;
-
-        if (weaponSettings.swayTime > 6.3f)
-        {
-            weaponSettings.swayTime = 0f;
-        }
-
-        weaponSettings.weaponSwayObject.localPosition = weaponSettings.swayPosition;
+        reserveAmmo = Mathf.Min(reserveAmmo + amount, maxReserveAmmo);
+        // UpdateAmmoText(); // Optional: Update HUD with new ammo counts
     }
 
-    private Vector3 LissajousCurve(float Time, float A, float B)
+    public void SubtractAmmo(float amount)
     {
-        return new Vector3(Mathf.Sin(Time), A * Mathf.Sin(B * Time + Mathf.PI));
+        reserveAmmo = Mathf.Max(reserveAmmo - amount, 0);
+        // UpdateAmmoText(); // Optional: Update HUD with new ammo counts
     }
 }
