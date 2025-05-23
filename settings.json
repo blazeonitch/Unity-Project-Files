@@ -1,0 +1,195 @@
+{
+  "terminal.integrated.defaultProfile.windows": "Windows PowerShell",
+  "files.autoSave": "afterDelay",
+
+  //Workbench
+  "workbench.colorTheme": "Aura Dracula Spirit (Soft)",
+  "workbench.activityBar.location": "hidden",
+  "workbench.editor.showTabs": "single",
+  "workbench.statusBar.visible": false,
+  "workbench.startupEditor": "none",
+  "workbench.tips.enabled": false,
+  "workbench.sideBar.location": "right",
+  "workbench.iconTheme": "material-icon-theme",
+  "material-icon-theme.hidesExplorerArrows": true,
+  "workbench.tree.enableStickyScroll": false,
+  "workbench.tree.renderIndentGuides": "none",
+  "workbench.tree.indent": 4,
+  "window.zoomLevel": -0.2,
+  "workbench.colorCustomizations": {
+    "editorCursor.background": "#000000",
+    "editorOverviewRuler.wordHighlightStrongForeground": "#0000",
+    "editorOverviewRuler.selectionHighlightForeground": "#0000",
+    "editorOverviewRuler.rangeHighlightForeground": "#0000",
+    "editorOverviewRuler.wordHighlightForeground": "#0000",
+    "editorOverviewRuler.bracketMatchForeground": "#0000",
+    "editorOverviewRuler.findMatchForeground": "#0000",
+    "editorOverviewRuler.modifiedForeground": "#0000",
+    "editorOverviewRuler.deletedForeground": "#0000",
+    "editorOverviewRuler.warningForeground": "#0000",
+    "editorOverviewRuler.addedForeground": "#0000",
+    "editorOverviewRuler.errorForeground": "#0000",
+    "editorOverviewRuler.infoForeground": "#0000",
+    "editorOverviewRuler.border": "#0000",
+    "[Aura Dracula Spirit (Soft)]": {
+      "editorSuggestWidget.selectedBackground": "#3A334B",
+      "sideBar.background": "#191521"
+    }
+  },
+  "workbench.layoutControl.enabled": false,
+
+  //Custom UI
+  "custom-ui-style.stylesheet": {
+    ".notification-toast": "box-shadow: none !important",
+    ".quick-input-widget.show-file-icons": "box-shadow: none !important",
+    ".quick-input-widget": "top: 25vh !important",
+    ".quick-input-list .scrollbar": "display: none",
+    ".monaco-action-bar.quick-input-inline-action-bar": "display: none",
+    ".editor-widget.find-widget": "box-shadow: none; border-radius: 4px",
+    ".quick-input-titlebar": "background: #100B15 !important",
+    ".sidebar .title-label": "padding: 0 !important",
+    ".sidebar": "border: none !important",
+    ".monaco-workbench .monaco-list:not(.element-focused):focused:before": "outline: none !important",
+    ".monaco-list-row.focused": "outline: none !important",
+    ".title-actions": "display: none !important",
+    ".title.show-file-icons .label-container .monaco-icon-label.file-icon": "justify-content: center !important",
+    ".title .monaco-icon-label:after": "margin-right: 0",
+    ".monaco-workbench .part.editor >.content .editor-group-container>.title>.label-container>.title-label": "padding-left: 60px",
+    ".monaco-editor .cursor-layer .cursor": "background-image: linear-gradient(135deg, #ffaffc 10%, #DA70D6 100%)"
+  },
+  "custom-ui-style.font.sansSerif": "Fira Code",
+
+  //Explorer -
+  "explorer.compactFolders": false,
+  "explorer.confirmDelete": false,
+  "explorer.confirmDragAndDrop": false,
+  "explorer.decorations.badges": false,
+
+  //Breadcrumbs
+  "breadcrumbs.enabled": false,
+
+  //Editor
+  "editor.minimap.enabled": false,
+  "editor.mouseWheelZoom": false,
+  "editor.wordWrap": "on",
+  "editor.fontFamily": "Fira Code",
+  "editor.fontLigatures": true,
+  "editor.lineNumbers": "off",
+  "editor.scrollbar.horizontal": "hidden",
+  "editor.scrollbar.vertical": "hidden",
+  "editor.stickyScroll.enabled": false,
+  "editor.cursorBlinking": "solid",
+  "editor.cursorStyle": "block",
+  "editor.colorDecorators": false,
+  "editor.codeLens": false,
+  "editor.links": false,
+  "editor.matchBrackets": "never",
+  "editor.lightbulb.enabled": "off",
+  "editor.hover.enabled": false,
+  "editor.tabSize": 2,
+  "editor.showFoldingControls": "never",
+  "editor.renderWhitespace": "none",
+  "editor.renderLineHighlight": "none",
+  "editor.guides.indentation": false,
+  "editor.selectionHighlight": false,
+  "editor.overviewRulerBorder": false,
+  "editor.hideCursorInOverviewRuler": true,
+  "editor.quickSuggestions": {
+    "other": "off"
+  },
+  "editor.suggestOnTriggerCharacters": false,
+  "editor.tabCompletion": "on",
+  "editor.snippetSuggestions": "top",
+  "editor.triggerExpansionOnTab": true,
+
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "scm.diffDecorations": "none",
+
+
+  //Code runner
+  "code-runner.executorMap": {
+    "javascript": "cls;; node",
+    "java": "clear && cd $dir && javac $fileName && java $fileNameWithoutExt",
+    "c": "cls;; cd $dir && gcc $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "zig": "zig run",
+    "cpp": "cls;; cd $dir && g++ $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "objective-c": "cd $dir && gcc -framework Cocoa $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "php": "php",
+    "python": "cls;; python -u",
+    "perl": "perl",
+    "perl6": "perl6",
+    "ruby": "ruby",
+    "go": "go run",
+    "lua": "lua",
+    "groovy": "groovy",
+    "powershell": "powershell -ExecutionPolicy ByPass -File",
+    "bat": "cmd /c",
+    "shellscript": "bash",
+    "fsharp": "fsi",
+    "csharp": "cls;; dotnet run",
+    "vbscript": "cscript //Nologo",
+    "typescript": "ts-node",
+    "coffeescript": "coffee",
+    "scala": "scala",
+    "swift": "swift",
+    "julia": "julia",
+    "crystal": "crystal",
+    "ocaml": "ocaml",
+    "r": "Rscript",
+    "applescript": "osascript",
+    "clojure": "lein exec",
+    "haxe": "haxe --cwd $dirWithoutTrailingSlash --run $fileNameWithoutExt",
+    "rust": "cd $dir && rustc $fileName && $dir$fileNameWithoutExt",
+    "racket": "racket",
+    "scheme": "csi -script",
+    "ahk": "autohotkey",
+    "autoit": "autoit3",
+    "dart": "dart",
+    "pascal": "cd $dir && fpc $fileName && $dir$fileNameWithoutExt",
+    "d": "cd $dir && dmd $fileName && $dir$fileNameWithoutExt",
+    "haskell": "runghc",
+    "nim": "nim compile --verbosity:0 --hints:off --run",
+    "lisp": "sbcl --script",
+    "kit": "kitc --run",
+    "v": "v run",
+    "sass": "sass --style expanded",
+    "scss": "scss --style expanded",
+    "less": "cd $dir && lessc $fileName $fileNameWithoutExt.css",
+    "FortranFreeForm": "cd $dir && gfortran $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "fortran-modern": "cd $dir && gfortran $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "fortran_fixed-form": "cd $dir && gfortran $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "fortran": "cd $dir && gfortran $fileName -o $fileNameWithoutExt && $dir$fileNameWithoutExt",
+    "sml": "cd $dir && sml $fileName",
+    "mojo": "mojo run",
+    "erlang": "escript",
+    "spwn": "spwn build",
+    "pkl": "cd $dir && pkl eval -f yaml $fileName -o $fileNameWithoutExt.yaml",
+    "gleam": "gleam run -m $fileNameWithoutExt"
+  },
+  "code-runner.runInTerminal": true,
+
+  //Extensions
+
+  //Git
+  "git.decorations.enabled": false,
+
+  //Prettier
+  "[html]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[css]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "workbench.navigationControl.enabled": false,
+  "extensions.experimental.affinity": {
+    "asvetliakov.vscode-neovim": 1
+  },
+  "chat.commandCenter.enabled": false,
+  "git.autofetch": true,
+
+
+}
